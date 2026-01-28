@@ -968,7 +968,7 @@ const dashboardHTML = `
 		}
 		
 		loadDashboard();
-		setInterval(loadDashboard, 120000);
+		// setInterval(loadDashboard, 120000);
 	</script>
 </body>
 </html>
