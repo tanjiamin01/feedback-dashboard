@@ -1,6 +1,6 @@
 /**
- * Feedback Analysis Dashboard - Smart AI Edition
- * Uses AI to prioritize feedback and extract actionable themes
+ * Feedback Intelligence Dashboard - Optimized Edition
+ * Smart priority scoring and theme extraction with optimized database reads
  */
 
 const dashboardHTML = `
@@ -455,7 +455,7 @@ const dashboardHTML = `
 	<div id="loading-overlay" class="loading-overlay" style="display: none;">
 		<div class="loading-content">
 			<div class="loading-spinner"></div>
-			<div id="loading-text">Analyzing feedback with AI...</div>
+			<div id="loading-text">Analyzing feedback...</div>
 		</div>
 	</div>
 	
@@ -470,38 +470,37 @@ const dashboardHTML = `
 				const data = await response.json();
 				allFeedback = data;
 				
-				// Check if any items need analysis
-				const needsAnalysis = data.filter(f => !f.priority || !f.themes);
-				if (needsAnalysis.length > 0) {
-					showLoading(true, \`Analyzing \${needsAnalysis.length} feedback items...\`);
-					updateStatus('analyzing', \`Analyzing \${needsAnalysis.length} items...\`);
+				// Check if any items need analysis (client-side check to avoid extra API call)
+				const needsAnalysis = data.some(f => !f.priority || !f.themes);
+				
+				if (needsAnalysis) {
+					showLoading(true, 'Analyzing feedback...');
+					updateStatus('analyzing', 'Analyzing feedback...');
 					
-					await analyzeAll();
+					// Run analysis once
+					const analysisResponse = await fetch('/api/analyze', { method: 'POST' });
+					const analysisResult = await analysisResponse.json();
 					
-					// Reload after analysis
-					const refreshed = await fetch('/api/feedback');
-					allFeedback = await refreshed.json();
+					console.log('Analysis result:', analysisResult);
 					
-					// Get insights
-					const insightsResponse = await fetch('/api/insights');
-					insights = await insightsResponse.json();
+					// Only reload if something was actually analyzed
+					if (analysisResult.analyzed > 0) {
+						const refreshed = await fetch('/api/feedback');
+						allFeedback = await refreshed.json();
+					}
 					
 					showLoading(false);
 					updateStatus('live', 'Live');
 				} else {
-					// Get insights
-					const insightsResponse = await fetch('/api/insights');
-					insights = await insightsResponse.json();
 					updateStatus('live', 'Live');
 				}
 				
-				// Render insights
+				// Get insights (single request)
+				const insightsResponse = await fetch('/api/insights');
+				insights = await insightsResponse.json();
+				
 				renderInsights(insights);
-				
-				// Populate filter dropdowns
 				populateFilters(allFeedback);
-				
-				// Apply filters and render
 				applyFilters();
 				
 			} catch (error) {
@@ -677,14 +676,6 @@ const dashboardHTML = `
 			document.getElementById('feedback-list').innerHTML = feedbackHTML;
 		}
 		
-		async function analyzeAll() {
-			try {
-				await fetch('/api/analyze', { method: 'POST' });
-			} catch (error) {
-				console.error('Error analyzing feedback:', error);
-			}
-		}
-		
 		function updateStatus(type, text) {
 			const indicator = document.getElementById('status-indicator');
 			const statusText = document.getElementById('status-text');
@@ -707,7 +698,8 @@ const dashboardHTML = `
 		}
 		
 		loadDashboard();
-		setInterval(loadDashboard, 60000); // Refresh every minute
+		// Auto-refresh every 2 minutes (less frequent to reduce DB load)
+		setInterval(loadDashboard, 120000);
 	</script>
 </body>
 </html>
@@ -717,6 +709,7 @@ export default {
 	async fetch(request, env) {
 		const url = new URL(request.url);
 		
+		// Serve the dashboard HTML
 		if (url.pathname === '/' || url.pathname === '') {
 			return new Response(dashboardHTML, {
 				headers: { 
@@ -726,7 +719,7 @@ export default {
 			});
 		}
 		
-		// Get all feedback
+		// Get all feedback (optimized single query with caching)
 		if (url.pathname === '/api/feedback') {
 			try {
 				const { results } = await env.DB.prepare(
@@ -736,7 +729,8 @@ export default {
 				return new Response(JSON.stringify(results), {
 					headers: { 
 						'Content-Type': 'application/json',
-						'Access-Control-Allow-Origin': '*'
+						'Access-Control-Allow-Origin': '*',
+						'Cache-Control': 'public, max-age=10'
 					}
 				});
 			} catch (error) {
@@ -751,7 +745,7 @@ export default {
 		if (url.pathname === '/api/insights') {
 			try {
 				const { results } = await env.DB.prepare(
-					'SELECT * FROM feedback'
+					'SELECT priority, themes, category FROM feedback'
 				).all();
 				
 				// Extract all themes
@@ -802,7 +796,10 @@ export default {
 				};
 				
 				return new Response(JSON.stringify(insights), {
-					headers: { 'Content-Type': 'application/json' }
+					headers: { 
+						'Content-Type': 'application/json',
+						'Cache-Control': 'public, max-age=30'
+					}
 				});
 				
 			} catch (error) {
@@ -813,9 +810,26 @@ export default {
 			}
 		}
 		
-		// Smart AI analysis - priority + themes
+		// Smart analysis - only runs if needed (optimized with caching check)
 		if (url.pathname === '/api/analyze' && request.method === 'POST') {
 			try {
+				// Check if analysis is needed (optimized COUNT query)
+				const needsAnalysisCheck = await env.DB.prepare(
+					'SELECT COUNT(*) as count FROM feedback WHERE priority IS NULL OR themes IS NULL'
+				).first();
+				
+				if (needsAnalysisCheck.count === 0) {
+					return new Response(JSON.stringify({ 
+						success: true, 
+						analyzed: 0,
+						message: 'All feedback already analyzed',
+						alreadyComplete: true
+					}), {
+						headers: { 'Content-Type': 'application/json' }
+					});
+				}
+				
+				// Analyze only unanalyzed items (limit 5 for cost control)
 				const { results } = await env.DB.prepare(
 					'SELECT * FROM feedback WHERE priority IS NULL OR themes IS NULL LIMIT 5'
 				).all();
@@ -823,89 +837,67 @@ export default {
 				let analyzed = 0;
 				
 				for (const item of results) {
-					try {
-						// Use AI to extract priority and themes
-						const aiResponse = await env.AI.run('@cf/meta/llama-3-8b-instruct', {
-							messages: [
-								{
-									role: 'system',
-									content: `You are a product manager analyzing customer feedback. For each feedback:
-1. Assign priority: urgent, high, medium, or low based on:
-   - Urgent: System failures, blocking bugs, data loss, security issues
-   - High: Major features broken, significant UX problems, many users affected
-   - Medium: Minor bugs, feature requests, documentation gaps
-   - Low: Nice-to-haves, cosmetic issues, suggestions
-
-2. Extract 2-3 themes (short keywords like: performance, documentation, UX, API, pricing, etc.)
-
-Respond ONLY in this JSON format:
-{"priority": "urgent|high|medium|low", "themes": ["theme1", "theme2"]}`
-								},
-								{
-									role: 'user',
-									content: `Analyze this feedback:\n\nSource: ${item.source}\nCategory: ${item.category}\nFeedback: "${item.text}"`
-								}
-							]
-						});
-						
-						let priority = 'medium';
-						let themes = [];
-						
-						if (aiResponse && aiResponse.response) {
-							try {
-								// Extract JSON from response (handle markdown code blocks)
-								let responseText = aiResponse.response.trim();
-								responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-								
-								const parsed = JSON.parse(responseText);
-								priority = parsed.priority || 'medium';
-								themes = parsed.themes || [];
-								
-								// Validate priority
-								if (!['urgent', 'high', 'medium', 'low'].includes(priority)) {
-									priority = 'medium';
-								}
-								
-							} catch (parseError) {
-								console.error('Failed to parse AI response:', parseError);
-								// Fallback: simple keyword matching
-								const text = item.text.toLowerCase();
-								if (text.includes('error') || text.includes('broken') || text.includes('crash') || text.includes('fail')) {
-									priority = 'urgent';
-								} else if (text.includes('slow') || text.includes('confusing') || text.includes('difficult')) {
-									priority = 'high';
-								} else {
-									priority = 'medium';
-								}
-								
-								themes = [item.category.toLowerCase()];
-							}
-						}
-						
-						// Update database
-						await env.DB.prepare(
-							'UPDATE feedback SET priority = ?, themes = ? WHERE id = ?'
-						).bind(priority, JSON.stringify(themes), item.id).run();
-						
-						analyzed++;
-						
-					} catch (aiError) {
-						console.error('AI analysis error for item', item.id, aiError);
-						// Fallback
-						await env.DB.prepare(
-							'UPDATE feedback SET priority = ?, themes = ? WHERE id = ?'
-						).bind('medium', JSON.stringify([item.category.toLowerCase()]), item.id).run();
+					const text = item.text.toLowerCase();
+					let priority = 'medium';
+					let themes = [item.category.toLowerCase()];
+					
+					// Rule-based priority assignment
+					if (text.includes('error') || text.includes('broken') || text.includes('crash') || 
+					    text.includes('fail') || text.includes('500') || text.includes('bug')) {
+						priority = 'urgent';
+					} else if (text.includes('slow') || text.includes('confusing') || text.includes('unclear') || 
+					           text.includes('missing') || text.includes('difficult') || text.includes('cant')) {
+						priority = 'high';
+					} else if (text.includes('love') || text.includes('great') || text.includes('amazing') || 
+					           text.includes('smooth') || text.includes('easy')) {
+						priority = 'low';
 					}
+					
+					// Theme extraction
+					if (text.includes('document') || text.includes('docs') || text.includes('example')) {
+						themes.push('documentation');
+					}
+					if (text.includes('slow') || text.includes('performance') || text.includes('speed') || text.includes('takes forever')) {
+						themes.push('performance');
+					}
+					if (text.includes('ui') || text.includes('ux') || text.includes('interface') || text.includes('dashboard') || text.includes('confusing')) {
+						themes.push('UX');
+					}
+					if (text.includes('deploy') || text.includes('build') || text.includes('wrangler')) {
+						themes.push('deployment');
+					}
+					if (text.includes('error') || text.includes('message') || text.includes('cryptic')) {
+						themes.push('error-messages');
+					}
+					if (text.includes('binding') || text.includes('d1') || text.includes('api')) {
+						themes.push('API');
+					}
+					if (text.includes('pricing') || text.includes('cost') || text.includes('request')) {
+						themes.push('pricing');
+					}
+					
+					// Deduplicate themes, limit to 3
+					themes = [...new Set(themes)].slice(0, 3);
+					
+					// Single update per item
+					await env.DB.prepare(
+						'UPDATE feedback SET priority = ?, themes = ? WHERE id = ?'
+					).bind(priority, JSON.stringify(themes), item.id).run();
+					
+					analyzed++;
 				}
 				
 				return new Response(JSON.stringify({ 
 					success: true, 
-					analyzed: analyzed
+					analyzed: analyzed,
+					message: `Analyzed ${analyzed} items`,
+					moreToAnalyze: results.length === 5
 				}), {
 					headers: { 'Content-Type': 'application/json' }
 				});
 				
 			} catch (error) {
+				console.error('Analysis endpoint error:', error);
 				return new Response(JSON.stringify({ 
 					error: error.message,
 					success: false 
@@ -916,6 +908,7 @@ Respond ONLY in this JSON format:
 			}
 		}
 		
+		// 404 for unknown routes
 		return new Response('Not Found', { status: 404 });
 	}
 };
