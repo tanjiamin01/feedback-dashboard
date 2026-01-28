@@ -1,6 +1,6 @@
 /**
- * Feedback Intelligence Dashboard - Optimized Edition
- * Smart priority scoring and theme extraction with optimized database reads
+ * Feedback Intelligence Dashboard
+ * PM-focused feedback management with AI-powered analysis and status tracking
  */
 
 const dashboardHTML = `
@@ -9,7 +9,7 @@ const dashboardHTML = `
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Feedback Intelligence Dashboard</title>
+	<title>Feedback Dashboard</title>
 	<style>
 		* { margin: 0; padding: 0; box-sizing: border-box; }
 		body { 
@@ -17,55 +17,56 @@ const dashboardHTML = `
 			background: #f5f5f5;
 			padding: 20px;
 		}
-		.container { max-width: 1400px; margin: 0 auto; }
-		h1 { margin-bottom: 10px; color: #333; }
-		.subtitle { color: #666; margin-bottom: 30px; font-size: 14px; }
+		.container { max-width: 1600px; margin: 0 auto; }
 		
 		.insights-section {
 			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 			color: white;
-			padding: 30px;
+			padding: 25px 30px;
 			border-radius: 8px;
 			box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-			margin-bottom: 30px;
+			margin-bottom: 25px;
 		}
 		
-		.insights-section h2 {
-			font-size: 24px;
-			margin-bottom: 20px;
-			display: flex;
-			align-items: center;
-			gap: 10px;
+		.insights-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			gap: 20px;
 		}
 		
-		.insight-item {
-			background: rgba(255,255,255,0.1);
+		.insight-card {
+			background: rgba(255,255,255,0.15);
 			backdrop-filter: blur(10px);
-			padding: 15px 20px;
+			padding: 20px;
 			border-radius: 6px;
-			margin-bottom: 12px;
 			border-left: 4px solid #ffd700;
 		}
 		
-		.insight-item:last-child { margin-bottom: 0; }
-		
-		.insight-title {
-			font-weight: 600;
-			margin-bottom: 5px;
-			font-size: 16px;
+		.insight-number {
+			font-size: 42px;
+			font-weight: bold;
+			margin-bottom: 8px;
 		}
 		
-		.insight-description {
+		.insight-label {
 			font-size: 14px;
 			opacity: 0.9;
-			line-height: 1.5;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			margin-bottom: 8px;
+		}
+		
+		.insight-detail {
+			font-size: 13px;
+			opacity: 0.85;
+			line-height: 1.4;
 		}
 		
 		.stats-grid {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 			gap: 20px;
-			margin-bottom: 30px;
+			margin-bottom: 25px;
 		}
 		
 		.stat-card {
@@ -75,24 +76,117 @@ const dashboardHTML = `
 			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 		}
 		
+		.stat-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 15px;
+		}
+		
 		.stat-value {
-			font-size: 36px;
+			font-size: 42px;
 			font-weight: bold;
 			color: #333;
-			margin-bottom: 8px;
 		}
 		
 		.stat-label {
-			font-size: 14px;
+			font-size: 12px;
 			color: #666;
 			text-transform: uppercase;
 			letter-spacing: 0.5px;
+			font-weight: 600;
 		}
 		
-		.stat-trend {
+		.donut-container {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-top: 20px;
+			position: relative;
+		}
+		
+		.donut-chart {
+			width: 180px;
+			height: 180px;
+			position: relative;
+		}
+		
+		.donut-legend {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			margin-left: 30px;
+		}
+		
+		.legend-item {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-size: 13px;
+		}
+		
+		.legend-color {
+			width: 16px;
+			height: 16px;
+			border-radius: 3px;
+		}
+		
+		.legend-color.urgent { background: #d32f2f; }
+		.legend-color.high { background: #f57c00; }
+		.legend-color.medium { background: #fbc02d; }
+		.legend-color.low { background: #388e3c; }
+		
+		.legend-text {
+			flex: 1;
+			color: #333;
+		}
+		
+		.legend-count {
+			font-weight: 600;
+			color: #666;
+		}
+		
+		.source-chart {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			margin-top: 12px;
+		}
+		
+		.source-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+		
+		.source-label {
 			font-size: 12px;
-			color: #999;
-			margin-top: 5px;
+			color: #666;
+			min-width: 80px;
+		}
+		
+		.source-bar-container {
+			flex: 1;
+			height: 20px;
+			background: #f0f0f0;
+			border-radius: 4px;
+			overflow: hidden;
+		}
+		
+		.source-bar-fill {
+			height: 100%;
+			background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+			transition: width 0.3s ease;
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+			padding-right: 8px;
+		}
+		
+		.source-count {
+			font-size: 11px;
+			color: white;
+			font-weight: 600;
 		}
 		
 		.controls {
@@ -100,14 +194,14 @@ const dashboardHTML = `
 			padding: 20px;
 			border-radius: 8px;
 			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-			margin-bottom: 30px;
+			margin-bottom: 25px;
 		}
 		
 		.controls-row {
 			display: flex;
 			gap: 15px;
 			flex-wrap: wrap;
-			align-items: center;
+			align-items: flex-end;
 		}
 		
 		.control-group {
@@ -131,6 +225,7 @@ const dashboardHTML = `
 			font-size: 14px;
 			background: white;
 			cursor: pointer;
+			height: 40px;
 		}
 		
 		select:hover, button:hover {
@@ -150,11 +245,13 @@ const dashboardHTML = `
 			display: flex;
 			align-items: center;
 			gap: 8px;
-			padding: 8px 12px;
+			padding: 10px 16px;
 			background: #e8f5e9;
 			border-radius: 4px;
 			font-size: 13px;
 			color: #2e7d32;
+			height: 40px;
+			border: 1px solid transparent;
 		}
 		
 		.status-indicator.analyzing {
@@ -177,9 +274,65 @@ const dashboardHTML = `
 		
 		.feedback-section {
 			background: white;
-			padding: 25px;
+			padding: 0;
 			border-radius: 8px;
 			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+			overflow: hidden;
+		}
+		
+		.tabs {
+			display: flex;
+			border-bottom: 2px solid #f0f0f0;
+			background: #fafafa;
+		}
+		
+		.tab {
+			flex: 1;
+			padding: 18px 24px;
+			text-align: center;
+			cursor: pointer;
+			font-weight: 600;
+			font-size: 14px;
+			color: #666;
+			border-bottom: 3px solid transparent;
+			transition: all 0.2s;
+			position: relative;
+		}
+		
+		.tab:hover {
+			background: #f5f5f5;
+			color: #333;
+		}
+		
+		.tab.active {
+			color: #0051c3;
+			background: white;
+			border-bottom-color: #0051c3;
+		}
+		
+		.tab-badge {
+			display: inline-block;
+			margin-left: 8px;
+			padding: 2px 8px;
+			background: #e0e0e0;
+			color: #666;
+			border-radius: 12px;
+			font-size: 12px;
+			font-weight: 600;
+		}
+		
+		.tab.active .tab-badge {
+			background: #0051c3;
+			color: white;
+		}
+		
+		.tab-content {
+			display: none;
+			padding: 25px;
+		}
+		
+		.tab-content.active {
+			display: block;
 		}
 		
 		.section-header {
@@ -187,11 +340,6 @@ const dashboardHTML = `
 			justify-content: space-between;
 			align-items: center;
 			margin-bottom: 20px;
-		}
-		
-		.section-header h2 {
-			color: #333;
-			font-size: 20px;
 		}
 		
 		.results-count {
@@ -259,16 +407,6 @@ const dashboardHTML = `
 			font-weight: 600;
 		}
 		
-		.category-badge {
-			display: inline-block;
-			padding: 4px 10px;
-			background: #f3e5f5;
-			color: #7b1fa2;
-			border-radius: 4px;
-			font-size: 12px;
-			font-weight: 600;
-		}
-		
 		.priority {
 			display: inline-block;
 			padding: 6px 14px;
@@ -282,7 +420,20 @@ const dashboardHTML = `
 		.priority.high { background: #f57c00; color: white; }
 		.priority.medium { background: #fbc02d; color: #000; }
 		.priority.low { background: #388e3c; color: white; }
-		.priority.analyzing { background: #e2e3e5; color: #383d41; }
+		
+		.status-dropdown {
+			padding: 6px 12px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			font-size: 12px;
+			background: white;
+			cursor: pointer;
+			font-weight: 600;
+		}
+		
+		.status-dropdown.new { color: #1976d2; border-color: #1976d2; }
+		.status-dropdown.in-progress { color: #f57c00; border-color: #f57c00; }
+		.status-dropdown.completed { color: #388e3c; border-color: #388e3c; }
 		
 		.theme-badge {
 			display: inline-block;
@@ -364,34 +515,61 @@ const dashboardHTML = `
 </head>
 <body>
 	<div class="container">
-		<h1>🎯 Feedback Intelligence Dashboard</h1>
-		<div class="subtitle">AI-powered priority scoring and theme extraction for product managers</div>
-		
-		<div class="insights-section" id="insights-section">
-			<h2>🤖 AI Insights</h2>
-			<div id="insights-content">
-				<div class="insight-item">
-					<div class="insight-description">Analyzing feedback patterns...</div>
+		<div class="insights-section">
+			<div class="insights-grid" id="insights-grid">
+				<div class="insight-card">
+					<div class="insight-number">-</div>
+					<div class="insight-label">Analyzing...</div>
 				</div>
 			</div>
 		</div>
 		
 		<div class="stats-grid">
 			<div class="stat-card">
-				<div class="stat-value" id="total-count">-</div>
-				<div class="stat-label">Total Feedback</div>
+				<div class="stat-header">
+					<div>
+						<div class="stat-value" id="total-count">-</div>
+						<div class="stat-label">Total Feedback</div>
+					</div>
+				</div>
 			</div>
+			
 			<div class="stat-card">
-				<div class="stat-value" id="urgent-count">-</div>
-				<div class="stat-label">Urgent Issues</div>
+				<div class="stat-label">Priority Distribution</div>
+				<div class="donut-container">
+					<canvas id="donut-chart" class="donut-chart" width="180" height="180"></canvas>
+					<div class="donut-legend">
+						<div class="legend-item">
+							<div class="legend-color urgent"></div>
+							<span class="legend-text">Urgent</span>
+							<span class="legend-count" id="urgent-count">0</span>
+						</div>
+						<div class="legend-item">
+							<div class="legend-color high"></div>
+							<span class="legend-text">High</span>
+							<span class="legend-count" id="high-count">0</span>
+						</div>
+						<div class="legend-item">
+							<div class="legend-color medium"></div>
+							<span class="legend-text">Medium</span>
+							<span class="legend-count" id="medium-count">0</span>
+						</div>
+						<div class="legend-item">
+							<div class="legend-color low"></div>
+							<span class="legend-text">Low</span>
+							<span class="legend-count" id="low-count">0</span>
+						</div>
+					</div>
+				</div>
 			</div>
+			
 			<div class="stat-card">
-				<div class="stat-value" id="high-count">-</div>
-				<div class="stat-label">High Priority</div>
-			</div>
-			<div class="stat-card">
-				<div class="stat-value" id="themes-count">-</div>
-				<div class="stat-label">Themes Detected</div>
+				<div class="stat-label">Feedback Sources</div>
+				<div class="source-chart" id="source-chart">
+					<div class="source-row">
+						<span class="source-label">Loading...</span>
+					</div>
+				</div>
 			</div>
 		</div>
 		
@@ -400,40 +578,40 @@ const dashboardHTML = `
 				<div class="control-group">
 					<label>Sort By</label>
 					<select id="sort-select" onchange="applyFilters()">
-						<option value="priority">Priority (Urgent First)</option>
-						<option value="newest">Newest First</option>
-						<option value="oldest">Oldest First</option>
+						<option value="priority">Priority</option>
+						<option value="newest">Newest</option>
+						<option value="oldest">Oldest</option>
 					</select>
 				</div>
 				
 				<div class="control-group">
-					<label>Filter by Priority</label>
+					<label>Priority</label>
 					<select id="priority-filter" onchange="applyFilters()">
-						<option value="all">All Priorities</option>
-						<option value="urgent">Urgent Only</option>
-						<option value="high">High Priority</option>
-						<option value="medium">Medium Priority</option>
-						<option value="low">Low Priority</option>
+						<option value="all">All</option>
+						<option value="urgent">Urgent</option>
+						<option value="high">High</option>
+						<option value="medium">Medium</option>
+						<option value="low">Low</option>
 					</select>
 				</div>
 				
 				<div class="control-group">
-					<label>Filter by Source</label>
+					<label>Source</label>
 					<select id="source-filter" onchange="applyFilters()">
-						<option value="all">All Sources</option>
+						<option value="all">All</option>
 					</select>
 				</div>
 				
 				<div class="control-group">
-					<label>Filter by Category</label>
-					<select id="category-filter" onchange="applyFilters()">
-						<option value="all">All Categories</option>
+					<label>Theme</label>
+					<select id="theme-filter" onchange="applyFilters()">
+						<option value="all">All</option>
 					</select>
 				</div>
 				
 				<div class="control-group">
 					<label>&nbsp;</label>
-					<button onclick="resetFilters()">Reset Filters</button>
+					<button onclick="resetFilters()">Reset</button>
 				</div>
 				
 				<div class="status-indicator" id="status-indicator">
@@ -444,11 +622,38 @@ const dashboardHTML = `
 		</div>
 		
 		<div class="feedback-section">
-			<div class="section-header">
-				<h2>💬 Prioritized Feedback</h2>
-				<span class="results-count" id="results-count">Showing 0 of 0</span>
+			<div class="tabs">
+				<div class="tab active" onclick="switchTab('new')">
+					New <span class="tab-badge" id="new-badge">0</span>
+				</div>
+				<div class="tab" onclick="switchTab('in-progress')">
+					In Progress <span class="tab-badge" id="in-progress-badge">0</span>
+				</div>
+				<div class="tab" onclick="switchTab('completed')">
+					Completed <span class="tab-badge" id="completed-badge">0</span>
+				</div>
 			</div>
-			<div id="feedback-list"></div>
+			
+			<div id="new-content" class="tab-content active">
+				<div class="section-header">
+					<span class="results-count" id="new-results-count">0 items</span>
+				</div>
+				<div id="new-feedback-list"></div>
+			</div>
+			
+			<div id="in-progress-content" class="tab-content">
+				<div class="section-header">
+					<span class="results-count" id="in-progress-results-count">0 items</span>
+				</div>
+				<div id="in-progress-feedback-list"></div>
+			</div>
+			
+			<div id="completed-content" class="tab-content">
+				<div class="section-header">
+					<span class="results-count" id="completed-results-count">0 items</span>
+				</div>
+				<div id="completed-feedback-list"></div>
+			</div>
 		</div>
 	</div>
 	
@@ -461,8 +666,21 @@ const dashboardHTML = `
 	
 	<script>
 		let allFeedback = [];
-		let filteredFeedback = [];
-		let insights = [];
+		let currentTab = 'new';
+		
+		function switchTab(tabName) {
+			currentTab = tabName;
+			
+			// Update tab styling
+			document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+			document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+			
+			event.target.closest('.tab').classList.add('active');
+			document.getElementById(tabName + '-content').classList.add('active');
+			
+			// Re-render current tab
+			applyFilters();
+		}
 		
 		async function loadDashboard() {
 			try {
@@ -470,44 +688,49 @@ const dashboardHTML = `
 				const data = await response.json();
 				allFeedback = data;
 				
-				// Check if any items need analysis (client-side check to avoid extra API call)
 				const needsAnalysis = data.some(f => !f.priority || !f.themes);
 				
 				if (needsAnalysis) {
-					showLoading(true, 'Analyzing feedback...');
-					updateStatus('analyzing', 'Analyzing feedback...');
+					showLoading(true, 'Analyzing feedback with AI...');
+					updateStatusIndicator('analyzing', 'Analyzing...');
 					
-					// Run analysis once
 					const analysisResponse = await fetch('/api/analyze', { method: 'POST' });
 					const analysisResult = await analysisResponse.json();
 					
-					console.log('Analysis result:', analysisResult);
-					
-					// Only reload if something was actually analyzed
 					if (analysisResult.analyzed > 0) {
 						const refreshed = await fetch('/api/feedback');
 						allFeedback = await refreshed.json();
 					}
 					
 					showLoading(false);
-					updateStatus('live', 'Live');
+					updateStatusIndicator('live', 'Live');
 				} else {
-					updateStatus('live', 'Live');
+					updateStatusIndicator('live', 'Live');
 				}
 				
-				// Get insights (single request)
 				const insightsResponse = await fetch('/api/insights');
-				insights = await insightsResponse.json();
+				const insights = await insightsResponse.json();
 				
 				renderInsights(insights);
 				populateFilters(allFeedback);
+				updateTabBadges();
 				applyFilters();
 				
 			} catch (error) {
 				console.error('Error loading dashboard:', error);
-				updateStatus('error', 'Error loading data');
+				updateStatusIndicator('error', 'Error');
 				showLoading(false);
 			}
+		}
+		
+		function updateTabBadges() {
+			const newCount = allFeedback.filter(f => (f.status || 'new') === 'new').length;
+			const inProgressCount = allFeedback.filter(f => f.status === 'in-progress').length;
+			const completedCount = allFeedback.filter(f => f.status === 'completed').length;
+			
+			document.getElementById('new-badge').textContent = newCount;
+			document.getElementById('in-progress-badge').textContent = inProgressCount;
+			document.getElementById('completed-badge').textContent = completedCount;
 		}
 		
 		function showLoading(show, text = '') {
@@ -518,90 +741,110 @@ const dashboardHTML = `
 		}
 		
 		function renderInsights(insights) {
-			if (!insights || !insights.themes || insights.themes.length === 0) {
-				document.getElementById('insights-content').innerHTML = \`
-					<div class="insight-item">
-						<div class="insight-description">No insights available yet. Add more feedback to see patterns.</div>
-					</div>
-				\`;
-				return;
-			}
+			if (!insights) return;
 			
 			let html = '';
 			
-			// Top themes
-			if (insights.themes && insights.themes.length > 0) {
-				html += \`
-					<div class="insight-item">
-						<div class="insight-title">🎯 Top Themes Across All Feedback</div>
-						<div class="insight-description">\${insights.themes.slice(0, 5).join(' • ')}</div>
-					</div>
-				\`;
-			}
-			
-			// Urgent items
 			if (insights.urgentCount > 0) {
 				html += \`
-					<div class="insight-item">
-						<div class="insight-title">⚠️ Action Required</div>
-						<div class="insight-description">\${insights.urgentCount} urgent issues need immediate attention. Focus on: \${insights.urgentCategories || 'error handling and performance'}</div>
+					<div class="insight-card">
+						<div class="insight-number">\${insights.urgentCount}</div>
+						<div class="insight-label">Urgent Issues</div>
+						<div class="insight-detail">\${insights.urgentThemes}</div>
 					</div>
 				\`;
 			}
 			
-			// Common pain points
-			if (insights.commonPainPoints) {
+			if (insights.themes && insights.themes.length > 0) {
 				html += \`
-					<div class="insight-item">
-						<div class="insight-title">📉 Common Pain Points</div>
-						<div class="insight-description">\${insights.commonPainPoints}</div>
+					<div class="insight-card">
+						<div class="insight-number">\${insights.themes.length}</div>
+						<div class="insight-label">Active Themes</div>
+						<div class="insight-detail">\${insights.themes.slice(0, 3).join(', ')}</div>
 					</div>
 				\`;
 			}
 			
-			// Recommendation
-			if (insights.recommendation) {
+			if (insights.newCount > 0) {
 				html += \`
-					<div class="insight-item">
-						<div class="insight-title">💡 Recommended Next Steps</div>
-						<div class="insight-description">\${insights.recommendation}</div>
+					<div class="insight-card">
+						<div class="insight-number">\${insights.newCount}</div>
+						<div class="insight-label">Awaiting Review</div>
+						<div class="insight-detail">New feedback items</div>
 					</div>
 				\`;
 			}
 			
-			document.getElementById('insights-content').innerHTML = html;
+			if (html === '') {
+				html = \`
+					<div class="insight-card">
+						<div class="insight-number">✓</div>
+						<div class="insight-label">All Clear</div>
+						<div class="insight-detail">No urgent items</div>
+					</div>
+				\`;
+			}
+			
+			document.getElementById('insights-grid').innerHTML = html;
 		}
 		
 		function populateFilters(data) {
 			const sources = [...new Set(data.map(f => f.source))].sort();
 			const sourceFilter = document.getElementById('source-filter');
-			sourceFilter.innerHTML = '<option value="all">All Sources</option>' +
+			sourceFilter.innerHTML = '<option value="all">All</option>' +
 				sources.map(s => \`<option value="\${s}">\${s}</option>\`).join('');
 			
-			const categories = [...new Set(data.map(f => f.category))].sort();
-			const categoryFilter = document.getElementById('category-filter');
-			categoryFilter.innerHTML = '<option value="all">All Categories</option>' +
-				categories.map(c => \`<option value="\${c}">\${c}</option>\`).join('');
+			const allThemes = new Set();
+			data.forEach(f => {
+				if (f.themes) {
+					try {
+						const themes = JSON.parse(f.themes);
+						themes.forEach(t => allThemes.add(t.toLowerCase()));
+					} catch (e) {}
+				}
+			});
+			
+			const themeFilter = document.getElementById('theme-filter');
+			themeFilter.innerHTML = '<option value="all">All</option>' +
+				[...allThemes].sort().map(t => \`<option value="\${t}">\${t}</option>\`).join('');
 		}
 		
 		function applyFilters() {
 			const sortBy = document.getElementById('sort-select').value;
 			const priorityFilter = document.getElementById('priority-filter').value;
 			const sourceFilter = document.getElementById('source-filter').value;
-			const categoryFilter = document.getElementById('category-filter').value;
+			const themeFilter = document.getElementById('theme-filter').value;
 			
-			filteredFeedback = allFeedback.filter(item => {
+			// Filter by current tab status
+			let filtered = allFeedback.filter(item => {
+				const itemStatus = item.status || 'new';
+				return itemStatus === currentTab;
+			});
+			
+			// Apply other filters
+			filtered = filtered.filter(item => {
 				if (priorityFilter !== 'all' && item.priority !== priorityFilter) return false;
 				if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
-				if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
+				
+				if (themeFilter !== 'all') {
+					try {
+						const themes = item.themes ? JSON.parse(item.themes) : [];
+						const normalizedThemes = themes.map(t => t.toLowerCase());
+						if (!normalizedThemes.includes(themeFilter.toLowerCase())) return false;
+					} catch (e) {
+						return false;
+					}
+				}
+				
 				return true;
 			});
 			
-			filteredFeedback.sort((a, b) => {
+			// Sort
+			filtered.sort((a, b) => {
 				switch(sortBy) {
 					case 'priority':
-						const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3, analyzing: 4 };
-						return priorityOrder[a.priority || 'analyzing'] - priorityOrder[b.priority || 'analyzing'];
+						const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+						return priorityOrder[a.priority || 'medium'] - priorityOrder[b.priority || 'medium'];
 					case 'newest':
 						return new Date(b.timestamp) - new Date(a.timestamp);
 					case 'oldest':
@@ -612,40 +855,106 @@ const dashboardHTML = `
 			});
 			
 			renderDashboard();
+			renderFeedbackList(currentTab, filtered);
 		}
 		
 		function renderDashboard() {
 			const total = allFeedback.length;
 			const urgent = allFeedback.filter(f => f.priority === 'urgent').length;
 			const high = allFeedback.filter(f => f.priority === 'high').length;
-			
-			// Extract unique themes
-			const allThemes = new Set();
-			allFeedback.forEach(f => {
-				if (f.themes) {
-					try {
-						const themes = JSON.parse(f.themes);
-						themes.forEach(t => allThemes.add(t));
-					} catch (e) {}
-				}
-			});
+			const medium = allFeedback.filter(f => f.priority === 'medium').length;
+			const low = allFeedback.filter(f => f.priority === 'low').length;
 			
 			document.getElementById('total-count').textContent = total;
 			document.getElementById('urgent-count').textContent = urgent;
 			document.getElementById('high-count').textContent = high;
-			document.getElementById('themes-count').textContent = allThemes.size;
+			document.getElementById('medium-count').textContent = medium;
+			document.getElementById('low-count').textContent = low;
 			
-			document.getElementById('results-count').textContent = 
-				\`Showing \${filteredFeedback.length} of \${total}\`;
+			// Draw donut chart
+			drawDonutChart(urgent, high, medium, low);
 			
-			if (filteredFeedback.length === 0) {
-				document.getElementById('feedback-list').innerHTML = 
-					'<div class="empty-state">No feedback matches your filters</div>';
+			// Source chart
+			const sourceCounts = {};
+			allFeedback.forEach(f => {
+				sourceCounts[f.source] = (sourceCounts[f.source] || 0) + 1;
+			});
+			
+			const maxSource = Math.max(...Object.values(sourceCounts), 1);
+			const sourceHTML = Object.entries(sourceCounts)
+				.sort((a, b) => b[1] - a[1])
+				.map(([source, count]) => \`
+					<div class="source-row">
+						<span class="source-label">\${source}</span>
+						<div class="source-bar-container">
+							<div class="source-bar-fill" style="width: \${(count / maxSource) * 100}%">
+								<span class="source-count">\${count}</span>
+							</div>
+						</div>
+					</div>
+				\`).join('');
+			
+			document.getElementById('source-chart').innerHTML = sourceHTML;
+		}
+		
+		function drawDonutChart(urgent, high, medium, low) {
+			const canvas = document.getElementById('donut-chart');
+			const ctx = canvas.getContext('2d');
+			const centerX = 90;
+			const centerY = 90;
+			const radius = 70;
+			const innerRadius = 45;
+			
+			const total = urgent + high + medium + low || 1;
+			const data = [
+				{ value: urgent, color: '#d32f2f' },
+				{ value: high, color: '#f57c00' },
+				{ value: medium, color: '#fbc02d' },
+				{ value: low, color: '#388e3c' }
+			];
+			
+			ctx.clearRect(0, 0, 180, 180);
+			
+			let currentAngle = -Math.PI / 2;
+			
+			data.forEach(segment => {
+				const sliceAngle = (segment.value / total) * 2 * Math.PI;
+				
+				if (segment.value > 0) {
+					// Draw outer arc
+					ctx.beginPath();
+					ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+					ctx.arc(centerX, centerY, innerRadius, currentAngle + sliceAngle, currentAngle, true);
+					ctx.closePath();
+					ctx.fillStyle = segment.color;
+					ctx.fill();
+				}
+				
+				currentAngle += sliceAngle;
+			});
+			
+			// Draw center circle (white)
+			ctx.beginPath();
+			ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI);
+			ctx.fillStyle = 'white';
+			ctx.fill();
+		}
+		
+		function renderFeedbackList(status, filteredData) {
+			const listId = status + '-feedback-list';
+			const countId = status + '-results-count';
+			
+			document.getElementById(countId).textContent = \`\${filteredData.length} items\`;
+			
+			if (filteredData.length === 0) {
+				document.getElementById(listId).innerHTML = 
+					'<div class="empty-state">No feedback in this category</div>';
 				return;
 			}
 			
-			const feedbackHTML = filteredFeedback.map(f => {
-				const priority = f.priority || 'analyzing';
+			const feedbackHTML = filteredData.map(f => {
+				const priority = f.priority || 'medium';
+				const itemStatus = f.status || 'new';
 				const date = new Date(f.timestamp).toLocaleString();
 				
 				let themes = [];
@@ -660,9 +969,13 @@ const dashboardHTML = `
 						<div class="feedback-header">
 							<div class="feedback-meta">
 								<span class="source-badge">\${f.source}</span>
-								<span class="category-badge">\${f.category}</span>
+								<span class="priority \${priority}">\${priority}</span>
 							</div>
-							<span class="priority \${priority}">\${priority}</span>
+							<select class="status-dropdown \${itemStatus}" onchange="updateStatus(\${f.id}, this.value)">
+								<option value="new" \${itemStatus === 'new' ? 'selected' : ''}>New</option>
+								<option value="in-progress" \${itemStatus === 'in-progress' ? 'selected' : ''}>In Progress</option>
+								<option value="completed" \${itemStatus === 'completed' ? 'selected' : ''}>Completed</option>
+							</select>
 						</div>
 						<div class="feedback-text">\${f.text}</div>
 						<div class="feedback-footer">
@@ -673,10 +986,28 @@ const dashboardHTML = `
 				\`;
 			}).join('');
 			
-			document.getElementById('feedback-list').innerHTML = feedbackHTML;
+			document.getElementById(listId).innerHTML = feedbackHTML;
 		}
 		
-		function updateStatus(type, text) {
+		async function updateStatus(id, newStatus) {
+			try {
+				await fetch('/api/update-status', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id, status: newStatus })
+				});
+				
+				const item = allFeedback.find(f => f.id === id);
+				if (item) item.status = newStatus;
+				
+				updateTabBadges();
+				applyFilters();
+			} catch (error) {
+				console.error('Error updating status:', error);
+			}
+		}
+		
+		function updateStatusIndicator(type, text) {
 			const indicator = document.getElementById('status-indicator');
 			const statusText = document.getElementById('status-text');
 			
@@ -693,12 +1024,11 @@ const dashboardHTML = `
 			document.getElementById('sort-select').value = 'priority';
 			document.getElementById('priority-filter').value = 'all';
 			document.getElementById('source-filter').value = 'all';
-			document.getElementById('category-filter').value = 'all';
+			document.getElementById('theme-filter').value = 'all';
 			applyFilters();
 		}
 		
 		loadDashboard();
-		// Auto-refresh every 2 minutes (less frequent to reduce DB load)
 		setInterval(loadDashboard, 120000);
 	</script>
 </body>
@@ -709,7 +1039,6 @@ export default {
 	async fetch(request, env) {
 		const url = new URL(request.url);
 		
-		// Serve the dashboard HTML
 		if (url.pathname === '/' || url.pathname === '') {
 			return new Response(dashboardHTML, {
 				headers: { 
@@ -719,11 +1048,10 @@ export default {
 			});
 		}
 		
-		// Get all feedback (optimized single query with caching)
 		if (url.pathname === '/api/feedback') {
 			try {
 				const { results } = await env.DB.prepare(
-					'SELECT * FROM feedback ORDER BY timestamp DESC'
+					'SELECT id, source, text, priority, themes, status, timestamp FROM feedback ORDER BY timestamp DESC'
 				).all();
 				
 				return new Response(JSON.stringify(results), {
@@ -741,14 +1069,31 @@ export default {
 			}
 		}
 		
-		// Get AI-powered insights
+		if (url.pathname === '/api/update-status' && request.method === 'POST') {
+			try {
+				const { id, status } = await request.json();
+				
+				await env.DB.prepare(
+					'UPDATE feedback SET status = ? WHERE id = ?'
+				).bind(status, id).run();
+				
+				return new Response(JSON.stringify({ success: true }), {
+					headers: { 'Content-Type': 'application/json' }
+				});
+			} catch (error) {
+				return new Response(JSON.stringify({ error: error.message }), {
+					status: 500,
+					headers: { 'Content-Type': 'application/json' }
+				});
+			}
+		}
+		
 		if (url.pathname === '/api/insights') {
 			try {
 				const { results } = await env.DB.prepare(
-					'SELECT priority, themes, category FROM feedback'
+					'SELECT priority, themes, status FROM feedback'
 				).all();
 				
-				// Extract all themes
 				const allThemes = [];
 				results.forEach(f => {
 					if (f.themes) {
@@ -759,40 +1104,35 @@ export default {
 					}
 				});
 				
-				// Count theme frequency
 				const themeCounts = {};
 				allThemes.forEach(theme => {
 					themeCounts[theme] = (themeCounts[theme] || 0) + 1;
 				});
 				
-				// Get top themes
 				const topThemes = Object.entries(themeCounts)
 					.sort((a, b) => b[1] - a[1])
 					.slice(0, 5)
 					.map(([theme]) => theme);
 				
-				// Count urgent items
 				const urgentCount = results.filter(f => f.priority === 'urgent').length;
-				const highCount = results.filter(f => f.priority === 'high').length;
+				const newCount = results.filter(f => f.status === 'new' || !f.status).length;
 				
-				// Get urgent categories
 				const urgentItems = results.filter(f => f.priority === 'urgent');
-				const urgentCategories = [...new Set(urgentItems.map(f => f.category))].join(', ');
+				const urgentThemesList = [];
+				urgentItems.forEach(f => {
+					if (f.themes) {
+						try {
+							urgentThemesList.push(...JSON.parse(f.themes));
+						} catch (e) {}
+					}
+				});
+				const urgentThemes = [...new Set(urgentThemesList)].slice(0, 3).join(', ');
 				
-				// Generate insights
 				const insights = {
 					themes: topThemes,
 					urgentCount,
-					highCount,
-					urgentCategories,
-					commonPainPoints: topThemes.length > 0 
-						? `Users are reporting issues with: ${topThemes.slice(0, 3).join(', ')}`
-						: 'Not enough data to identify pain points',
-					recommendation: urgentCount > 0
-						? `Prioritize fixing ${urgentCount} urgent issues, especially in ${urgentCategories}`
-						: highCount > 0
-						? `Focus on ${highCount} high-priority items to improve user experience`
-						: 'Continue monitoring feedback for emerging patterns'
+					newCount,
+					urgentThemes
 				};
 				
 				return new Response(JSON.stringify(insights), {
@@ -810,10 +1150,8 @@ export default {
 			}
 		}
 		
-		// Smart analysis - only runs if needed (optimized with caching check)
 		if (url.pathname === '/api/analyze' && request.method === 'POST') {
 			try {
-				// Check if analysis is needed (optimized COUNT query)
 				const needsAnalysisCheck = await env.DB.prepare(
 					'SELECT COUNT(*) as count FROM feedback WHERE priority IS NULL OR themes IS NULL'
 				).first();
@@ -829,69 +1167,139 @@ export default {
 					});
 				}
 				
-				// Analyze only unanalyzed items (limit 5 for cost control)
 				const { results } = await env.DB.prepare(
-					'SELECT * FROM feedback WHERE priority IS NULL OR themes IS NULL LIMIT 5'
+					'SELECT * FROM feedback WHERE priority IS NULL OR themes IS NULL LIMIT 3'
 				).all();
 				
 				let analyzed = 0;
 				
 				for (const item of results) {
-					const text = item.text.toLowerCase();
-					let priority = 'medium';
-					let themes = [item.category.toLowerCase()];
-					
-					// Rule-based priority assignment
-					if (text.includes('error') || text.includes('broken') || text.includes('crash') || 
-					    text.includes('fail') || text.includes('500') || text.includes('bug')) {
-						priority = 'urgent';
-					} else if (text.includes('slow') || text.includes('confusing') || text.includes('unclear') || 
-					           text.includes('missing') || text.includes('difficult') || text.includes('cant')) {
-						priority = 'high';
-					} else if (text.includes('love') || text.includes('great') || text.includes('amazing') || 
-					           text.includes('smooth') || text.includes('easy')) {
-						priority = 'low';
+					try {
+						const aiResponse = await env.AI.run('@cf/meta/llama-3-8b-instruct', {
+							messages: [
+								{
+									role: 'system',
+									content: `You are a product manager analyzing customer feedback. Respond ONLY with valid JSON in this exact format:
+{"priority": "urgent|high|medium|low", "themes": ["theme1", "theme2"]}
+
+Priority levels:
+- urgent: System failures, blocking bugs, security issues, data loss
+- high: Major UX problems, broken features, significant performance issues
+- medium: Minor bugs, feature requests, documentation gaps
+- low: Nice-to-haves, positive feedback, cosmetic issues
+
+Themes should be lowercase single words or hyphenated phrases like: documentation, performance, ux, api, deployment, error-messages, pricing, onboarding`
+								},
+								{
+									role: 'user',
+									content: `Analyze this feedback:
+
+Source: ${item.source}
+Text: "${item.text}"`
+								}
+							],
+							max_tokens: 100
+						});
+						
+						let priority = 'medium';
+						let themes = [];
+						
+						if (aiResponse && aiResponse.response) {
+							try {
+								let responseText = aiResponse.response.trim();
+								responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+								
+								const parsed = JSON.parse(responseText);
+								priority = parsed.priority || 'medium';
+								themes = parsed.themes || [];
+								
+								if (!['urgent', 'high', 'medium', 'low'].includes(priority)) {
+									priority = 'medium';
+								}
+								
+								themes = themes.map(t => t.toLowerCase().trim()).filter(Boolean);
+								themes = [...new Set(themes)].slice(0, 3);
+								
+							} catch (parseError) {
+								console.error('Failed to parse AI response:', parseError);
+								const text = item.text.toLowerCase();
+								
+								if (text.includes('error') || text.includes('broken') || text.includes('crash') || 
+								    text.includes('fail') || text.includes('500') || text.includes('bug')) {
+									priority = 'urgent';
+									themes.push('bug');
+								} else if (text.includes('slow') || text.includes('confusing') || text.includes('unclear')) {
+									priority = 'high';
+								} else if (text.includes('love') || text.includes('great') || text.includes('amazing')) {
+									priority = 'low';
+								}
+								
+								if (text.includes('document') || text.includes('docs')) themes.push('documentation');
+								if (text.includes('slow') || text.includes('performance')) themes.push('performance');
+								if (text.includes('ui') || text.includes('ux') || text.includes('interface')) themes.push('ux');
+								if (text.includes('deploy') || text.includes('wrangler')) themes.push('deployment');
+								if (text.includes('error') || text.includes('message')) themes.push('error-messages');
+								if (text.includes('binding') || text.includes('api')) themes.push('api');
+								
+								themes = [...new Set(themes.map(t => t.toLowerCase()))].slice(0, 3);
+								
+								if (themes.length === 0) {
+									themes = priority === 'urgent' ? ['bug'] : ['feedback'];
+								}
+							}
+						}
+						
+						if (themes.length === 0) {
+							themes = ['general'];
+						}
+						
+						const status = item.status || 'new';
+						
+						await env.DB.prepare(
+							'UPDATE feedback SET priority = ?, themes = ?, status = ? WHERE id = ?'
+						).bind(priority, JSON.stringify(themes), status, item.id).run();
+						
+						analyzed++;
+						
+					} catch (aiError) {
+						console.error('AI analysis error for item', item.id, ':', aiError);
+						
+						const text = item.text.toLowerCase();
+						let priority = 'medium';
+						let themes = [];
+						
+						if (text.includes('error') || text.includes('broken') || text.includes('crash')) {
+							priority = 'urgent';
+							themes.push('bug');
+						} else if (text.includes('slow') || text.includes('confusing')) {
+							priority = 'high';
+							themes.push('performance');
+						} else if (text.includes('love') || text.includes('great')) {
+							priority = 'low';
+							themes.push('feedback');
+						}
+						
+						if (text.includes('document')) themes.push('documentation');
+						if (text.includes('deploy')) themes.push('deployment');
+						if (text.includes('ui') || text.includes('ux')) themes.push('ux');
+						
+						themes = [...new Set(themes.map(t => t.toLowerCase()))].slice(0, 3);
+						if (themes.length === 0) themes = ['general'];
+						
+						const status = item.status || 'new';
+						
+						await env.DB.prepare(
+							'UPDATE feedback SET priority = ?, themes = ?, status = ? WHERE id = ?'
+						).bind(priority, JSON.stringify(themes), status, item.id).run();
+						
+						analyzed++;
 					}
-					
-					// Theme extraction
-					if (text.includes('document') || text.includes('docs') || text.includes('example')) {
-						themes.push('documentation');
-					}
-					if (text.includes('slow') || text.includes('performance') || text.includes('speed') || text.includes('takes forever')) {
-						themes.push('performance');
-					}
-					if (text.includes('ui') || text.includes('ux') || text.includes('interface') || text.includes('dashboard') || text.includes('confusing')) {
-						themes.push('UX');
-					}
-					if (text.includes('deploy') || text.includes('build') || text.includes('wrangler')) {
-						themes.push('deployment');
-					}
-					if (text.includes('error') || text.includes('message') || text.includes('cryptic')) {
-						themes.push('error-messages');
-					}
-					if (text.includes('binding') || text.includes('d1') || text.includes('api')) {
-						themes.push('API');
-					}
-					if (text.includes('pricing') || text.includes('cost') || text.includes('request')) {
-						themes.push('pricing');
-					}
-					
-					// Deduplicate themes, limit to 3
-					themes = [...new Set(themes)].slice(0, 3);
-					
-					// Single update per item
-					await env.DB.prepare(
-						'UPDATE feedback SET priority = ?, themes = ? WHERE id = ?'
-					).bind(priority, JSON.stringify(themes), item.id).run();
-					
-					analyzed++;
 				}
 				
 				return new Response(JSON.stringify({ 
 					success: true, 
 					analyzed: analyzed,
-					message: `Analyzed ${analyzed} items`,
-					moreToAnalyze: results.length === 5
+					message: `Analyzed ${analyzed} items using Workers AI`
 				}), {
 					headers: { 'Content-Type': 'application/json' }
 				});
@@ -908,7 +1316,6 @@ export default {
 			}
 		}
 		
-		// 404 for unknown routes
 		return new Response('Not Found', { status: 404 });
 	}
 };

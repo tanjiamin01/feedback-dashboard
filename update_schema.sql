@@ -1,2 +1,1 @@
-ALTER TABLE feedback ADD COLUMN priority TEXT;
-ALTER TABLE feedback ADD COLUMN themes TEXT;
+ALTER TABLE feedback ADD COLUMN status TEXT DEFAULT 'new';
