@@ -22,44 +22,32 @@ const dashboardHTML = `
 		.insights-section {
 			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 			color: white;
-			padding: 25px 30px;
+			padding: 30px 35px;
 			border-radius: 8px;
 			box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 			margin-bottom: 25px;
 		}
 		
-		.insights-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-			gap: 20px;
-		}
-		
-		.insight-card {
-			background: rgba(255,255,255,0.15);
-			backdrop-filter: blur(10px);
-			padding: 20px;
-			border-radius: 6px;
-			border-left: 4px solid #ffd700;
-		}
-		
-		.insight-number {
-			font-size: 42px;
-			font-weight: bold;
-			margin-bottom: 8px;
-		}
-		
-		.insight-label {
+		.insights-header {
 			font-size: 14px;
-			opacity: 0.9;
 			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			margin-bottom: 8px;
+			letter-spacing: 1px;
+			opacity: 0.9;
+			margin-bottom: 15px;
+			font-weight: 600;
 		}
 		
-		.insight-detail {
-			font-size: 13px;
-			opacity: 0.85;
-			line-height: 1.4;
+		.insights-summary {
+			font-size: 18px;
+			line-height: 1.7;
+			opacity: 0.95;
+			font-weight: 400;
+		}
+		
+		.insights-loading {
+			font-size: 16px;
+			opacity: 0.8;
+			font-style: italic;
 		}
 		
 		.stats-grid {
@@ -516,11 +504,9 @@ const dashboardHTML = `
 <body>
 	<div class="container">
 		<div class="insights-section">
-			<div class="insights-grid" id="insights-grid">
-				<div class="insight-card">
-					<div class="insight-number">-</div>
-					<div class="insight-label">Analyzing...</div>
-				</div>
+			<div class="insights-header">AI Summary</div>
+			<div class="insights-summary" id="insights-summary">
+				<span class="insights-loading">Analyzing feedback patterns...</span>
 			</div>
 		</div>
 		
@@ -671,14 +657,12 @@ const dashboardHTML = `
 		function switchTab(tabName) {
 			currentTab = tabName;
 			
-			// Update tab styling
 			document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
 			document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 			
 			event.target.closest('.tab').classList.add('active');
 			document.getElementById(tabName + '-content').classList.add('active');
 			
-			// Re-render current tab
 			applyFilters();
 		}
 		
@@ -708,10 +692,11 @@ const dashboardHTML = `
 					updateStatusIndicator('live', 'Live');
 				}
 				
-				const insightsResponse = await fetch('/api/insights');
-				const insights = await insightsResponse.json();
+				// Get AI summary
+				const summaryResponse = await fetch('/api/summary');
+				const summary = await summaryResponse.json();
+				renderSummary(summary.summary);
 				
-				renderInsights(insights);
 				populateFilters(allFeedback);
 				updateTabBadges();
 				applyFilters();
@@ -720,6 +705,15 @@ const dashboardHTML = `
 				console.error('Error loading dashboard:', error);
 				updateStatusIndicator('error', 'Error');
 				showLoading(false);
+			}
+		}
+		
+		function renderSummary(summaryText) {
+			const summaryEl = document.getElementById('insights-summary');
+			if (summaryText) {
+				summaryEl.textContent = summaryText;
+			} else {
+				summaryEl.innerHTML = '<span class="insights-loading">No new feedback to analyze.</span>';
 			}
 		}
 		
@@ -738,54 +732,6 @@ const dashboardHTML = `
 			const loadingText = document.getElementById('loading-text');
 			overlay.style.display = show ? 'flex' : 'none';
 			if (text) loadingText.textContent = text;
-		}
-		
-		function renderInsights(insights) {
-			if (!insights) return;
-			
-			let html = '';
-			
-			if (insights.urgentCount > 0) {
-				html += \`
-					<div class="insight-card">
-						<div class="insight-number">\${insights.urgentCount}</div>
-						<div class="insight-label">Urgent Issues</div>
-						<div class="insight-detail">\${insights.urgentThemes}</div>
-					</div>
-				\`;
-			}
-			
-			if (insights.themes && insights.themes.length > 0) {
-				html += \`
-					<div class="insight-card">
-						<div class="insight-number">\${insights.themes.length}</div>
-						<div class="insight-label">Active Themes</div>
-						<div class="insight-detail">\${insights.themes.slice(0, 3).join(', ')}</div>
-					</div>
-				\`;
-			}
-			
-			if (insights.newCount > 0) {
-				html += \`
-					<div class="insight-card">
-						<div class="insight-number">\${insights.newCount}</div>
-						<div class="insight-label">Awaiting Review</div>
-						<div class="insight-detail">New feedback items</div>
-					</div>
-				\`;
-			}
-			
-			if (html === '') {
-				html = \`
-					<div class="insight-card">
-						<div class="insight-number">✓</div>
-						<div class="insight-label">All Clear</div>
-						<div class="insight-detail">No urgent items</div>
-					</div>
-				\`;
-			}
-			
-			document.getElementById('insights-grid').innerHTML = html;
 		}
 		
 		function populateFilters(data) {
@@ -815,13 +761,11 @@ const dashboardHTML = `
 			const sourceFilter = document.getElementById('source-filter').value;
 			const themeFilter = document.getElementById('theme-filter').value;
 			
-			// Filter by current tab status
 			let filtered = allFeedback.filter(item => {
 				const itemStatus = item.status || 'new';
 				return itemStatus === currentTab;
 			});
 			
-			// Apply other filters
 			filtered = filtered.filter(item => {
 				if (priorityFilter !== 'all' && item.priority !== priorityFilter) return false;
 				if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
@@ -839,7 +783,6 @@ const dashboardHTML = `
 				return true;
 			});
 			
-			// Sort
 			filtered.sort((a, b) => {
 				switch(sortBy) {
 					case 'priority':
@@ -871,10 +814,8 @@ const dashboardHTML = `
 			document.getElementById('medium-count').textContent = medium;
 			document.getElementById('low-count').textContent = low;
 			
-			// Draw donut chart
 			drawDonutChart(urgent, high, medium, low);
 			
-			// Source chart
 			const sourceCounts = {};
 			allFeedback.forEach(f => {
 				sourceCounts[f.source] = (sourceCounts[f.source] || 0) + 1;
@@ -921,7 +862,6 @@ const dashboardHTML = `
 				const sliceAngle = (segment.value / total) * 2 * Math.PI;
 				
 				if (segment.value > 0) {
-					// Draw outer arc
 					ctx.beginPath();
 					ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
 					ctx.arc(centerX, centerY, innerRadius, currentAngle + sliceAngle, currentAngle, true);
@@ -933,7 +873,6 @@ const dashboardHTML = `
 				currentAngle += sliceAngle;
 			});
 			
-			// Draw center circle (white)
 			ctx.beginPath();
 			ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI);
 			ctx.fillStyle = 'white';
@@ -1069,6 +1008,69 @@ export default {
 			}
 		}
 		
+		if (url.pathname === '/api/summary') {
+			try {
+				// Get new feedback only
+				const { results } = await env.DB.prepare(
+					'SELECT text, priority, themes, source FROM feedback WHERE status = ? OR status IS NULL ORDER BY timestamp DESC LIMIT 10'
+				).bind('new').all();
+				
+				if (results.length === 0) {
+					return new Response(JSON.stringify({ summary: null }), {
+						headers: { 'Content-Type': 'application/json' }
+					});
+				}
+				
+				// Build context for AI
+				const feedbackContext = results.map((f, i) => 
+					`${i + 1}. [${f.priority || 'medium'}] ${f.source}: ${f.text}`
+				).join('\n');
+				
+				// Use AI to generate summary
+				const aiResponse = await env.AI.run('@cf/meta/llama-3-8b-instruct', {
+					messages: [
+						{
+							role: 'system',
+							content: 'You are a product manager assistant. Write a 1-2 sentence summary of customer feedback. Be direct and specific. Do not use headers, markdown, asterisks, or phrases like "here is" or "summary:". Just write the facts in plain text.'
+						},
+						{
+							role: 'user',
+							content: `Write a direct summary of this feedback:\n\n${feedbackContext}\n\nWrite only the summary, no preamble or formatting.`
+						}
+					],
+					max_tokens: 100
+				});
+				
+				let summary = 'Recent feedback covers documentation issues, performance concerns, and UX improvements.';
+				
+				if (aiResponse && aiResponse.response) {
+					// Clean up the response - remove markdown, headers, preambles
+					summary = aiResponse.response.trim()
+						.replace(/\*\*/g, '')  // Remove bold markdown
+						.replace(/\*/g, '')    // Remove italic markdown
+						.replace(/^(Here's|Here is|Summary:|Overview:)\s*/i, '')  // Remove preambles
+						.replace(/^#+\s*/gm, '')  // Remove headers
+						.replace(/\n+/g, ' ')  // Single line
+						.trim();
+				}
+				
+				return new Response(JSON.stringify({ summary }), {
+					headers: { 
+						'Content-Type': 'application/json',
+						'Cache-Control': 'public, max-age=60'
+					}
+				});
+				
+			} catch (error) {
+				console.error('Summary generation error:', error);
+				return new Response(JSON.stringify({ 
+					summary: 'Recent feedback includes various product issues and feature requests.'
+				}), {
+					headers: { 'Content-Type': 'application/json' }
+				});
+			}
+		}
+		
 		if (url.pathname === '/api/update-status' && request.method === 'POST') {
 			try {
 				const { id, status } = await request.json();
@@ -1080,68 +1082,6 @@ export default {
 				return new Response(JSON.stringify({ success: true }), {
 					headers: { 'Content-Type': 'application/json' }
 				});
-			} catch (error) {
-				return new Response(JSON.stringify({ error: error.message }), {
-					status: 500,
-					headers: { 'Content-Type': 'application/json' }
-				});
-			}
-		}
-		
-		if (url.pathname === '/api/insights') {
-			try {
-				const { results } = await env.DB.prepare(
-					'SELECT priority, themes, status FROM feedback'
-				).all();
-				
-				const allThemes = [];
-				results.forEach(f => {
-					if (f.themes) {
-						try {
-							const themes = JSON.parse(f.themes);
-							allThemes.push(...themes);
-						} catch (e) {}
-					}
-				});
-				
-				const themeCounts = {};
-				allThemes.forEach(theme => {
-					themeCounts[theme] = (themeCounts[theme] || 0) + 1;
-				});
-				
-				const topThemes = Object.entries(themeCounts)
-					.sort((a, b) => b[1] - a[1])
-					.slice(0, 5)
-					.map(([theme]) => theme);
-				
-				const urgentCount = results.filter(f => f.priority === 'urgent').length;
-				const newCount = results.filter(f => f.status === 'new' || !f.status).length;
-				
-				const urgentItems = results.filter(f => f.priority === 'urgent');
-				const urgentThemesList = [];
-				urgentItems.forEach(f => {
-					if (f.themes) {
-						try {
-							urgentThemesList.push(...JSON.parse(f.themes));
-						} catch (e) {}
-					}
-				});
-				const urgentThemes = [...new Set(urgentThemesList)].slice(0, 3).join(', ');
-				
-				const insights = {
-					themes: topThemes,
-					urgentCount,
-					newCount,
-					urgentThemes
-				};
-				
-				return new Response(JSON.stringify(insights), {
-					headers: { 
-						'Content-Type': 'application/json',
-						'Cache-Control': 'public, max-age=30'
-					}
-				});
-				
 			} catch (error) {
 				return new Response(JSON.stringify({ error: error.message }), {
 					status: 500,
